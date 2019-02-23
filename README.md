@@ -73,6 +73,6 @@ The last two bits of a `StopRead` tag are ignored and should be set to zeros. Th
 
 ### SubStream
 
-The last two bits of a `SubStream` tag form a two-bit integer `subid_width`. The stream id of a SubStream packet is followed by `2^subid_width` bytes containing the id of the substream as an unsigned, big-endian integer. The new id can be any nonzero unsigned 64-bit integer that is not the id of any other substream.
+The last two bits of a `SubStream` tag are ignored and should be set to zeros. The stream id of a `SubStream` packet is the id of the newly-created substream.
 
 Since small ids take up less space, it is a good idea to recycle unused ids. An id that has been previously used can be assigned again if the previous substream of this id has had `Close` and `StopRead` packets from both endpoints.
