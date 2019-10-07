@@ -107,4 +107,4 @@ The state for a stream can be released once `Close` and `StopRead` packets have 
 
 ### Appendix B: Efficiently Restoring Credit
 
-TODO, see exponential strategy in e.g. the quic protocol
+Endpoints are free to grant credit however they see fit. Often they will keep credit below a maximum, filling it up as soon as the incoming data has been processed. Naively granting credit whenever it becomes available can be rather inefficient. Waiting too long with granting credit however can cause hiccups. In general, the closer the other endpoint is to reaching zero available credit, the more "urgent" it becomes to send new credit, even small amounts. This can be captured by a very simple mechanism: Only send credit if the amount is greater or equal to the amount of credit the other endpoint currently has available.
