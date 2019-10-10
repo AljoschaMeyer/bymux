@@ -55,6 +55,8 @@ Endpoints should be careful to only send `Write` packets whose length is small e
 
 Heartbeat ping and pong packets are straightforward: A ping packet whose fourth bit is one is answered with a pong packet whose fourth bit is one - these packets have no body beyond the header byte. A ping packet whose fourth bit is zero is followed by a stream id, and is answered with a matching pong packet.
 
+Ping and pong don't have clearly defined semantics, from the perspective of bymux either can be sent at any point, there is no invalid state that can be reached by issuing pings or pongs. In particular it is totally fine to send unsolicited pongs. The other endpoint is allowed to ignore them, or it might interpret them as malicious and terminate the connection, but terminating the connection is something it is allowed to do at any point anyways.
+
 ### Ending Streams: `Close` and `StopRead` Packets
 
 Ending streams serves two purposes: it notifies the other endpoint that no more data will flow, and it indicates that the state associated with a stream can be forgotten and its id can be reused. Since streams are bidirectional, an endopint can both indicate that it won't send and/or that it won't read data anymore.
