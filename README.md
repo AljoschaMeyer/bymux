@@ -4,7 +4,7 @@
 
 Bymux is a minimalistic protocol for multiplexing multiple logical data streams over a single actual data stream. The primary use case is to simulate multiple [tcp](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)-like connections over a single physical connection, but it works on arbitrary reliable, ordered, bidirectional, byte-oriented channels. The multiplexed streams also support independent heartbeats to check whether a particular stream is still alive.
 
-**Status: Well-defined and useful. Pending stabilization: If I don't see any need for further changes by 30/04/2020, this will be declared stable and any later breaking changes will result in new, non-bymux specifications.**
+**Status: Stable. Will not change anymore.**
 
 ## What, Why, and How?
 
@@ -46,7 +46,7 @@ Writing to a stream consumes as much credit as there are bytes written. Writing 
 
 Credit is given to a stream with a `Credit` packet whose fourth bit is zero. The stream id is followed by the amount of credit to be added for the stream, as a big-endian int of the width indicated by the 7th and 8th header byte. If the sum of the previously available credit and the new additional credit equals `2^64 - 1`, the credit is set to infinity, and no more credit is required for writing to the stream. If the sum of the previously available credit and the new additional credit is greater than `2^64 - 1`, the whole connection must be terminated immediately. Sending a `Credit` packet that gives zero bytes sets the credit to infinity instead. Receiving zero credit on a stream that already has infinite credit is ignored. Receiving a nonzero amount of credit on such a stream is an error, and the whole connection must be terminated immediately. This choice of semantics might seem odd at first, but it allows for efficient implementations: zero credit can be handled uniformly, and all overflows of a 64 bit integer are an error.
 
-Note that giving infinite credit can not be undone, and does not relieve the endpoint of the obligation to be able to handle incoming data immediately. This either means allocating an unbounded amount of memory (*don't* do that unless your code runs on a machine with infinite memory, this is exactly the situation that finite credit is deisgned to allow you to avoid), or being able to handle all incoming data with a bounded amount of memory. An example of the latter would be receiving credit: You can directly add incoming credit to a counter and are done processing, and the counter can not grow without bounds because there is a maximal legal amount of credit. Thus credit for a higher-level protocol (e.g. limiting how many rpc calls may be issued) can be managed over a channel without backpressure.
+Note that giving infinite credit can not be undone, and does not relieve the endpoint of the obligation to be able to handle incoming data immediately. This either means allocating an unbounded amount of memory (*don't* do that unless your code runs on a machine with infinite memory, this is exactly the situation that finite credit is designed to allow you to avoid), or being able to handle all incoming data with a bounded amount of memory. An example of the latter would be receiving credit: You can directly add incoming credit to a counter and are done processing, and the counter can not grow without bounds because there is a maximal legal amount of credit. Thus credit for a higher-level protocol (e.g. limiting how many rpc calls may be issued) can be managed over a channel without backpressure.
 
 Data is written to a stream with a `Write` packet whose fourth bit is zero. The stream id is followed by the amount of bytes to be written, encoded as a big-endian int of the width indicated by the 7th and 8th header byte, followed by that many bytes of raw data. Writing to a stream consumes one credit per byte - the metadata (header, stream id, length) does *not* cost any credit. Writes may not exceed the available credit. When receiving written data that hasn't been issued credit for, the whole connection must be terminated immediately. Data may always be written to a stream whose credit has been set to infinity.  
 Endpoints should be careful to only send `Write` packets whose length is small enough that the transmission time does not block data from other streams too long.
@@ -103,7 +103,7 @@ An endpoint needs to maintain the following global state:
 And for each stream the endpoint maintains:
 
 - the stream id
-- whether it has sent and/or received global `Close` and `StopRead` packets
+- whether it has sent and/or received `Close` and `StopRead` packets
 - how much credit it currently has
 - how much credit the other endpoint currently has
 
